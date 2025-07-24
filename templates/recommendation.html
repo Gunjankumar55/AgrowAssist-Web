@@ -1,239 +1,347 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %} {% block title %}Crop Recommendation | AgrowAssist{%
+endblock %} {% block content %} {% set crop_images = { 'Rice': 'rice', 'Maize':
+'maize', 'Jute': 'jute', 'Cotton': 'cotton', 'Coconut': 'coconut', 'Papaya':
+'papaya', 'Orange': 'orange', 'Apple': 'apple', 'Muskmelon': 'muskmelon',
+'Watermelon': 'watermelon', 'Grapes': 'grapes', 'Mango': 'mango', 'Banana':
+'bananan', 'Pomegranate': 'pomo', 'Lentil': 'lent', 'Blackgram': 'black',
+'Mothbeans': 'moth', 'Pigeonpeas': 'peas', 'Kidneybeans': 'kidney', 'Chickpea':
+'chik', 'Coffee': 'coffe' } %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crop Recommendation</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<div class="page-head">
+  <div class="container">
+    <div class="eyebrow" style="justify-content: center">
+      <span class="dot"></span>22 crops · instant result
+    </div>
+    <h1>Crop Recommendation</h1>
+    <p>
+      Enter your soil and climate readings — AgrowAssist will tell you the best
+      crop to grow.
+    </p>
+  </div>
+</div>
 
-    <style>
-        .navbar {
-            background-color: #0d1025;
-            padding: 0.5rem 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            min-height: 65px;
-        }
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <form
+        id="cropRecommendationForm"
+        action="{{ url_for('recommendation') }}"
+        method="POST"
+        data-animate
+      >
+        <div class="field-form">
+          <div class="form-toolbar">
+            <p>
+              Seven readings. Fill them in, or load a sample to see how it
+              works.
+            </p>
+            <button type="button" class="btn-example" id="loadExample">
+              <i class="fas fa-wand-magic-sparkles"></i> Load example
+            </button>
+          </div>
 
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo-img {
-            width: 50px;
-            height: 50px;
-            transition: transform 0.3s;
-        }
-
-        .navbar-toggler {
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.25rem 0.75rem;
-        }
-
-        .navbar-toggler:focus {
-            box-shadow: none;
-            outline: none;
-        }
-
-        .navbar-collapse {
-            flex-grow: 0;
-        }
-
-        .navbar-nav {
-            align-items: center;
-        }
-
-        .nav-link {
-            color: white !important;
-            padding: 0.5rem 1rem !important;
-            margin: 0 0.2rem;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .brand-text {
-            color: #737373;
-            margin-left: 1rem;
-        }
-
-        @media (max-width: 991px) {
-            .navbar-collapse {
-                background-color: #0d1025;
-                padding: 1rem;
-                border-radius: 0 0 10px 10px;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                z-index: 1000;
-            }
-
-            .nav-link {
-                text-align: center;
-            }
-
-            .brand-text {
-                margin: 0.5rem 0;
-                text-align: center;
-                display: block;
-            }
-        }
-
-        /* Responsive Form Styles */
-        .form-control {
-            margin-bottom: 1rem;
-        }
-
-        .btn {
-            margin: 0.5rem;
-            padding: 0.5rem 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        /* Media Queries */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .btn {
-                width: 100%;
-                margin: 0.5rem 0;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d1025; height: 65px;">
-        <div class="container-fluid">
-            <a href="/" class="navbar-brand">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="AgroAssist Logo" class="me-2" style="width: 80px; height: 80px;">
-            </a>
-            
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/"><i class="fa-solid fa-house"></i>Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" style="color: white;" href="/recommendation"><i class="fas fa-seedling"></i>Recommend</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" style="color: white;" href="/info"><i class="fas fa-chart-bar"></i>Statistics</a>
-                    </li>
-                </ul>
-                <a class="navbar-brand ms-auto" style="color: #737373;">AgroAssist</a>
+          <!-- SOIL -->
+          <div class="field-section">
+            <div class="field-section-head">
+              <span class="fs-icon"><i class="fas fa-flask"></i></span>
+              <h4>Soil Composition</h4>
+              <span class="fs-count">4 readings</span>
             </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="Nitrogen">Nitrogen (N)</label>
+                <div class="field-input">
+                  <i class="fas fa-flask"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Nitrogen"
+                    name="Nitrogen"
+                    placeholder="e.g. 90"
+                    required
+                    value="{{ N if N is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">kg/ha · typical 0–150</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="Phosporus">Phosphorus (P)</label>
+                <div class="field-input">
+                  <i class="fas fa-vial"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Phosporus"
+                    name="Phosporus"
+                    placeholder="e.g. 42"
+                    required
+                    value="{{ P if P is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">kg/ha · typical 0–150</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="Potassium">Potassium (K)</label>
+                <div class="field-input">
+                  <i class="fas fa-vials"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Potassium"
+                    name="Potassium"
+                    placeholder="e.g. 43"
+                    required
+                    value="{{ K if K is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">kg/ha · typical 0–150</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="Ph">pH Level</label>
+                <div class="field-input">
+                  <i class="fas fa-water"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Ph"
+                    name="Ph"
+                    placeholder="e.g. 6.5"
+                    required
+                    value="{{ ph if ph is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">scale · typical 0–14</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CLIMATE -->
+          <div class="field-section">
+            <div class="field-section-head">
+              <span class="fs-icon"><i class="fas fa-cloud-sun"></i></span>
+              <h4>Climate Conditions</h4>
+              <span class="fs-count">3 readings</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="Temperature">Temperature</label>
+                <div class="field-input">
+                  <i class="fas fa-temperature-half"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Temperature"
+                    name="Temperature"
+                    placeholder="e.g. 20.9"
+                    required
+                    value="{{ temp if temp is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">°C · typical 0–45</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="Humidity">Humidity</label>
+                <div class="field-input">
+                  <i class="fas fa-droplet"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Humidity"
+                    name="Humidity"
+                    placeholder="e.g. 82"
+                    required
+                    value="{{ humidity if humidity is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">% · typical 0–100</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="Rainfall">Rainfall</label>
+                <div class="field-input">
+                  <i class="fas fa-cloud-rain"></i>
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="Rainfall"
+                    name="Rainfall"
+                    placeholder="e.g. 202"
+                    required
+                    value="{{ rainfall if rainfall is not none else '' }}"
+                  />
+                </div>
+                <div class="field-hint">mm/year · typical 100–3000</div>
+                <div class="field-warning">
+                  <i class="fas fa-triangle-exclamation"></i>Outside typical
+                  range
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="submitBtn">
+              <span class="spinner"></span>Get Recommendation
+            </button>
+            <a href="{{ url_for('recommendation') }}" class="btn-reset"
+              >Reset</a
+            >
+          </div>
         </div>
-    </nav>
-    
-    
+      </form>
 
-    <div class="container mt-5">
-        <h1 class="text-center">Crop Recommendation System</h1>
-        <form id="cropRecommendationForm" action="/recommendation" method="POST">
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <label for="Nitrogen">Nitrogen</label>
-                    <input type="number" step="0.01" id="Nitrogen" name="Nitrogen" placeholder="Enter Nitrogen" class="form-control" required value="{{ N }}">
-                </div>
-                <div class="col-md-4">
-                    <label for="Phosporus">Phosphorus</label>
-                    <input type="number" step="0.01" id="Phosporus" name="Phosporus" placeholder="Enter Phosphorus" class="form-control" required value="{{ P }}">
-                </div>
-                <div class="col-md-4">
-                    <label for="Potassium">Potassium</label>
-                    <input type="number" step="0.01" id="Potassium" name="Potassium" placeholder="Enter Potassium" class="form-control" required value="{{ K }}">
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <label for="Temperature">Temperature (°C)</label>
-                    <input type="number" step="0.01" id="Temperature" name="Temperature" placeholder="Enter Temperature" class="form-control" required value="{{ temp }}">
-                </div>
-                <div class="col-md-4">
-                    <label for="Humidity">Humidity (%)</label>
-                    <input type="number" step="0.01" id="Humidity" name="Humidity" placeholder="Enter Humidity" class="form-control" required value="{{ humidity }}">
-                </div>
-                <div class="col-md-4">
-                    <label for="Ph">pH</label>
-                    <input type="number" step="0.01" id="Ph" name="Ph" placeholder="Enter pH" class="form-control" required value="{{ ph }}">
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <label for="Rainfall">Rainfall (mm/year)</label>
-                    <input type="number" step="0.01" id="Rainfall" name="Rainfall" placeholder="Enter Rainfall" class="form-control" required value="{{ rainfall }}">
-                </div>
-                <div class="col-md-12 mt-4 text-center">
-                    <button type="submit" class="btn btn-success">Get Recommendation</button>
-                    <button type="button" class="btn btn-danger" onclick="resetForm()">Reset</button>
-                </div>
-            </div>
-        </form>
-
-        {% if result %}
-            <div class="mt-4 alert alert-success">
-                <h4>{{ result }}</h4>
-            </div>
+      {% if crop %}
+      <div class="result-hero" id="resultPanel">
+        {% if crop in crop_images %}
+        <img
+          src="{{ url_for('static', filename='images/crops/' ~ crop_images[crop] ~ '.jpg') }}"
+          alt="{{ crop }}"
+          class="result-crop-img"
+        />
+        {% else %}
+        <div class="result-crop-fallback"><i class="fas fa-seedling"></i></div>
         {% endif %}
 
-        <div class="alert alert-info mt-4">
-            <h5>Input Parameter Information</h5>
-            <ul>
-                <li>Nitrogen: 0 - 150 kg/ha</li>
-                <li>Phosphorus: 0 - 150 kg/ha</li>
-                <li>Potassium: 0 - 150 kg/ha</li>
-                <li>Temperature: 0 - 45 °C</li>
-                <li>Humidity: 0 - 100%</li>
-                <li>pH: 0 - 14</li>
-                <li>Rainfall: 100 - 3000 mm/year</li>
-            </ul>
+        <div class="result-body">
+          <div class="result-eyebrow">Recommended crop</div>
+          <div class="result-crop">{{ crop }}</div>
+          <p>
+            Based on the soil and climate readings you entered, this is the best
+            match across all 22 crops we support.
+          </p>
+          <div class="result-inputs">
+            <span class="result-input-chip">N <b>{{ N }}</b></span>
+            <span class="result-input-chip">P <b>{{ P }}</b></span>
+            <span class="result-input-chip">K <b>{{ K }}</b></span>
+            <span class="result-input-chip">pH <b>{{ ph }}</b></span>
+            <span class="result-input-chip">{{ temp }}<b>°C</b></span>
+            <span class="result-input-chip">{{ humidity }}<b>% RH</b></span>
+            <span class="result-input-chip">{{ rainfall }}<b>mm</b></span>
+          </div>
         </div>
+      </div>
+      {% elif result %}
+      <div class="result-hero" id="resultPanel">
+        <div class="result-crop-fallback">
+          <i class="fas fa-circle-question"></i>
+        </div>
+        <div class="result-body">
+          <div class="result-eyebrow">Result</div>
+          <div class="result-crop">No match</div>
+          <p>{{ result }}</p>
+        </div>
+      </div>
+      {% endif %}
     </div>
+  </div>
+</div>
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p>&copy; 2024-25 AgroAssist. All rights reserved.</p>
-        <p> created by Gunjankumar Choudhari</p>
-    </footer>
+{% endblock %} {% block scripts %}
+<script>
+  (function () {
+    const RANGES = {
+      Nitrogen: [0, 150],
+      Phosporus: [0, 150],
+      Potassium: [0, 150],
+      Temperature: [0, 45],
+      Humidity: [0, 100],
+      Ph: [0, 14],
+      Rainfall: [100, 3000],
+    };
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <script>
-        function resetForm() {
-            // Clear all input fields
-            document.getElementById('cropRecommendationForm').reset();
-            // Clear the result display
-            const resultElement = document.querySelector('.mt-4.alert-success');
-            if (resultElement) {
-                resultElement.remove();
-            }
-            // Optional user feedback
-            alert("Form has been reset.");
-        }
-    </script>
-</body>
+    const EXAMPLE = {
+      Nitrogen: 90,
+      Phosporus: 42,
+      Potassium: 43,
+      Temperature: 20.9,
+      Humidity: 82,
+      Ph: 6.5,
+      Rainfall: 202,
+    };
 
-</html>
+    const form = document.getElementById("cropRecommendationForm");
+    if (!form) return;
+
+    // --- Soft range warnings (never blocks submission) ---
+    Object.keys(RANGES).forEach(function (name) {
+      const input = document.getElementById(name);
+      if (!input) return;
+
+      const wrap = input.closest(".field-input");
+      const warn = input
+        .closest(".field-group")
+        .querySelector(".field-warning");
+
+      function check() {
+        const val = parseFloat(input.value);
+        const [min, max] = RANGES[name];
+        const bad =
+          input.value !== "" && !isNaN(val) && (val < min || val > max);
+        wrap.classList.toggle("is-warning", bad);
+        warn.classList.toggle("is-visible", bad);
+      }
+
+      input.addEventListener("input", check);
+      check();
+    });
+
+    // --- Load example values ---
+    const exampleBtn = document.getElementById("loadExample");
+    if (exampleBtn) {
+      exampleBtn.addEventListener("click", function () {
+        Object.keys(EXAMPLE).forEach(function (name) {
+          const input = document.getElementById(name);
+          if (input) {
+            input.value = EXAMPLE[name];
+            input.dispatchEvent(new Event("input"));
+          }
+        });
+      });
+    }
+
+    // --- Loading state on submit ---
+    form.addEventListener("submit", function () {
+      const btn = document.getElementById("submitBtn");
+      if (btn) btn.classList.add("is-loading");
+    });
+
+    // --- Scroll to result after prediction ---
+    const result = document.getElementById("resultPanel");
+    if (result) {
+      setTimeout(function () {
+        result.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
+    }
+  })();
+</script>
+{% endblock %}

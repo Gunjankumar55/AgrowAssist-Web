@@ -5,6 +5,7 @@ import tensorflow as tf
 import json
 from PIL import Image
 import os
+import uuid
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -21,6 +22,17 @@ def allowed_file(filename):
 
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
+
+
+def save_upload(file):
+    """Store an upload under a unique name and return its path."""
+    suffix = os.path.splitext(secure_filename(file.filename))[1].lower()
+    destination = os.path.join(
+        app.config["UPLOAD_FOLDER"], f"{uuid.uuid4().hex}{suffix}"
+    )
+    file.save(destination)
+    return destination
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ==========================
@@ -230,6 +242,11 @@ def predict_health(image_path):
     return class_name, confidence
 
 
+@app.errorhandler(413)
+def upload_too_large(error):
+    return "Upload is larger than 8 MB.", 413
+
+
 # ==========================
 # HOME
 # ==========================
@@ -304,9 +321,7 @@ def predict_disease_route():
     if not allowed_file(file.filename):
         return render_template("disease.html", error="Only PNG, JPG and JPEG files are allowed.")
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
+    filepath = save_upload(file)
 
     disease_name, confidence = predict_disease(filepath)
 
@@ -347,9 +362,7 @@ def predict_fruit_route():
     if not allowed_file(file.filename):
         return render_template("identify.html", error="Only PNG, JPG and JPEG files are allowed.")
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
+    filepath = save_upload(file)
 
     fruit_name, confidence = predict_fruit(filepath)
 
@@ -397,9 +410,7 @@ def predict_health_route():
     if not allowed_file(file.filename):
         return render_template("health.html", error="Only PNG, JPG and JPEG files are allowed.")
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
+    filepath = save_upload(file)
 
     class_name, confidence = predict_health(filepath)
 

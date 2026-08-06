@@ -1,19 +1,66 @@
-# AgrowAssist Web
+# AgrowAssist
 
-A browser front end for the AgrowAssist models, so the project can be used
-without installing the Android app.
+AI-assisted crop and produce tools, packaged as a Flask website so the models
+can be used without installing the Android app.
 
-## What is in the repository
+Live demo: <https://gkc55-agrowassist.hf.space>  
+Android app: <https://github.com/Gunjankumar55/Agroassist----Smart-Agricultural-Assistance-System-App>
 
-- `app.py` — Flask application that loads the trained models and serves the pages
-- `templates/` — Jinja pages for the home screen, the four tools, analytics, and the class reference
-- `static/` — stylesheet, client script, and crop imagery
-- `models/` — TFLite classifiers
-- `model.pkl`, `minmaxscaler.pkl` — crop recommender and its scaler
-- `Crop Classification With Recommendation System.ipynb` — training notebook
-- `Crop_recommendation.csv` — training data
+## What it does
 
-## Setup
+| Module | Input | Output | Classes |
+| --- | --- | --- | --- |
+| Crop recommendation | 7 soil and climate readings | Best-fit crop | 22 |
+| Disease detection | Leaf photo | Diagnosis and treatment notes | 39 |
+| Produce identification | Photo | Name and nutrition data | 41 |
+| Freshness check | Photo | Fresh or spoiled | 28 |
+| Analytics | — | Embedded Power BI dashboard | — |
+| AgroBot | Natural-language question | Agriculture-scoped answer | — |
+
+## How it works
+
+### Crop recommendation
+
+```
+N, P, K, temperature, humidity, pH, rainfall
+        |
+   MinMaxScaler
+        |
+ RandomForestClassifier
+        |
+   predicted crop
+```
+
+The model was trained on MinMax-scaled features, so inference applies the same
+scaler. Skipping it would silently shift every prediction.
+
+### Vision models
+
+All three image models share one pipeline:
+
+```
+upload -> RGB -> resize 224x224 -> divide by 255 -> TFLite -> argmax + confidence
+```
+
+Produce identification and freshness checks apply a 50% confidence floor. Below
+it the page reports that no confident prediction was possible instead of showing
+a misleading label.
+
+### AgroBot
+
+Gemini with an agriculture-only system instruction. Chat history is kept in
+`localStorage` and the last ten turns are sent as context. If
+`GEMINI_API_KEY` is unset the endpoint returns 503 and the widget stays closed.
+
+## Stack
+
+- Backend: Flask, Gunicorn, Python 3.9
+- ML: scikit-learn Random Forest, three TensorFlow Lite CNNs
+- AI: Google Gemini
+- Frontend: HTML, CSS, vanilla JS, Bootstrap 5
+- Models and images: Git LFS
+
+## Run locally
 
 ```bash
 python -m venv .venv
@@ -24,40 +71,49 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open <http://127.0.0.1:5000>.
+Open <http://127.0.0.1:5000>. The first request is slow because all four models
+are loaded at start-up.
 
-The first start loads every model into memory, so it takes a few seconds.
+## Run with Docker
 
-## Routes
+```bash
+docker build -t agrowassist .
+docker run -p 7860:7860 -e GEMINI_API_KEY=your_key agrowassist
+```
 
-| Route | Purpose |
+The container runs Gunicorn on port 7860 with a single worker, which is what the
+Hugging Face Space uses.
+
+## Configuration
+
+| Variable | Purpose |
 | --- | --- |
-| `/` | Landing page |
-| `/recommendation` | Crop recommendation from seven soil and climate readings |
-| `/disease` | Leaf disease diagnosis |
-| `/identify` | Produce identification |
-| `/health` | Freshness check |
-| `/analytics` | Embedded Power BI crop dashboard |
-| `/information` | Supported crops, diseases, produce, and health classes |
+| `GEMINI_API_KEY` | Enables AgroBot; without it the chat endpoint returns 503 |
 
-## Models
+## Repository layout
 
-| Model | File | Classes |
-| --- | --- | --- |
-| Crop recommendation | `model.pkl` | 22 |
-| Leaf disease | `models/plant_disease_model.tflite` | 39 |
-| Produce identification | `models/fruit_vegetable_classifier_quantized.tflite` | 41 |
-| Freshness | `models/fruit_vegetable_healty_classifier.tflite` | 28 |
+```
+app.py                  Flask routes, model loading, prediction helpers
+templates/              Jinja pages
+static/css/style.css    Design system and page styles
+static/js/main.js       Small UI helpers
+static/js/chatbot.js    AgroBot widget
+models/                 TFLite classifiers
+docs/models.md          Model and class inventory
+```
 
-The crop model expects the same MinMax scaling used during training. The vision
-models take a 224×224 RGB image normalised to `[0, 1]`.
+## Tests
 
-## Notes
+There is no automated test suite. The routes were checked manually against
+sample images and the crop form against the training notebook's scaler.
 
-- Large binaries are tracked with Git LFS.
-- Uploaded images are written to `static/uploads/`, which is ignored by Git.
-- The project has not been benchmarked on a held-out set in this repository.
+## Limitations
 
-## License
+- Trained on a single dataset per task; no held-out evaluation is included.
+- The crop model covers 22 classes and the vision models cover 39, 41, and 28.
+- Uploads are stored under `static/uploads/` and are not cleaned automatically.
+- AgroBot depends on an external API and is unavailable without a key.
 
-No license file has been added. All rights reserved by the author.
+## Author
+
+Gunjankumar Choudhari — [GitHub](https://github.com/Gunjankumar55)
